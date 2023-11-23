@@ -50,9 +50,14 @@ CORS_ALLOWED_METHODS=$(echo "$CORS_ALLOWED_METHODS" | tr -d '[:space:]')
 CORS_ALLOWED_HEADERS=$(echo "$CORS_ALLOWED_HEADERS" | tr -d '[:space:]')
 CORS_EXPOSE_HEADERS=$(echo "$CORS_EXPOSE_HEADERS" | tr -d '[:space:]')
 
-#Deploy API in Azure APIM
+upload_format=$(awk '/openApiSpec:/ {split($2, a, "."); print a[length(a)]}' generate.yaml)
 
-AZURE_API_ID=$(az apim api import -g ${AZURE_GROUP_NAME} --api-id  ${CI_PROJECT_NAME} --display-name ${CI_PROJECT_NAME} --service-name ${AZURE_API_SERVICE_NAME} --path ${CI_PROJECT_NAME} --specification-path ./${CI_PROJECT_NAME}.yaml --specification-format OpenApi --subscription-required false | jq -r '.name')
+#Deploy API in Azure APIM
+if [ "${upload_format}" == yaml ]; then
+  AZURE_API_ID=$(az apim api import -g ${AZURE_GROUP_NAME} --api-id  ${CI_PROJECT_NAME} --display-name ${CI_PROJECT_NAME} --service-name ${AZURE_API_SERVICE_NAME} --path ${CI_PROJECT_NAME} --specification-path ./${CI_PROJECT_NAME}.yaml --specification-format OpenApi --subscription-required false | jq -r '.name')
+elif [ "${upload_format}" == json ]; then
+  AZURE_API_ID=$(az apim api import -g ${AZURE_GROUP_NAME} --api-id  ${CI_PROJECT_NAME} --display-name ${CI_PROJECT_NAME} --service-name ${AZURE_API_SERVICE_NAME} --path ${CI_PROJECT_NAME} --specification-path ./${CI_PROJECT_NAME}.json --specification-format OpenApiJson --subscription-required false | jq -r '.name')
+fi
 
 #AZURE_API_ID="employeeapplication"
 echo ${AZURE_API_ID}
