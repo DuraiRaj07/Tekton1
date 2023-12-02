@@ -6,14 +6,15 @@ CORS_ALLOWED_METHODS=$3
 CORS_CACHE_PERIOD_MAX_SECONDS=$4
 CORS_ALLOWED_HEADERS=$5
 CORS_EXPOSE_HEADERS=$6
+CORS_POLICY_APPLY=$7
 
-
-#echo $CORS_ALLOWED_ORIGINS
-#echo $CORS_ALLOW_CREDENTIALS
-#echo $CORS_ALLOWED_METHODS
-#echo $CORS_CACHE_PERIOD_MAX_SECONDS
-#echo $CORS_ALLOWED_HEADERS
-#echo $CORS_EXPOSE_HEADERS
+echo $CORS_ALLOWED_ORIGINS
+echo $CORS_ALLOW_CREDENTIALS
+echo $CORS_ALLOWED_METHODS
+echo $CORS_CACHE_PERIOD_MAX_SECONDS
+echo $CORS_ALLOWED_HEADERS
+echo $CORS_EXPOSE_HEADERS
+echo $CORS_POLICY_APPLY
 
 CORS_START_STRING="<cors allow-credentials=\\\""
 CORS_END_STRING="</cors>"
@@ -94,8 +95,15 @@ CORS_POLICY="$CORS_START_STRING$CORS_ORIGINS_MIDDLE_STRING$CORS_ORIGINS_END_STRI
 # Escape double quotes in the XML string
 ESCAPED_CORS_POLICY=${CORS_POLICY//\"/\\\"}
 
-sed -i "s/@CORS_POLICY@/api/g" update-policy.sh
+#sed -i "s/@CORS_POLICY@/api/g" update-policy.sh
+
   
 # Replace the placeholder with the IP filter addresses using a different delimiter for sed
-sed -i "s#@CORS@#${ESCAPED_CORS_POLICY//&/\\&}#g" update-policy.sh 
 
+if [ "${CORS_POLICY_APPLY}" == api ]; then
+	sed -i "s#@CORS@#${ESCAPED_CORS_POLICY//&/\\&}#g" update-policy.sh 
+	sed -i "s#@CO_RS_PRODUCT@##g" update-policy.sh
+else
+	sed -i "s#@CO_RS_PRODUCT@#${ESCAPED_CORS_POLICY//&/\\&}#g" update-policy.sh 
+	sed -i "s#@CORS@##g" update-policy.sh
+fi

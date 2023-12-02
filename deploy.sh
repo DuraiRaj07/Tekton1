@@ -57,6 +57,13 @@ if [ "${upload_format}" == yaml ]; then
   AZURE_API_ID=$(az apim api import -g ${AZURE_GROUP_NAME} --api-id  ${CI_PROJECT_NAME} --display-name ${CI_PROJECT_NAME} --service-name ${AZURE_API_SERVICE_NAME} --path ${CI_PROJECT_NAME} --specification-path ./${CI_PROJECT_NAME}.yaml --specification-format OpenApi --subscription-required false | jq -r '.name')
 elif [ "${upload_format}" == json ]; then
   AZURE_API_ID=$(az apim api import -g ${AZURE_GROUP_NAME} --api-id  ${CI_PROJECT_NAME} --display-name ${CI_PROJECT_NAME} --service-name ${AZURE_API_SERVICE_NAME} --path ${CI_PROJECT_NAME} --specification-path ./${CI_PROJECT_NAME}.json --specification-format OpenApiJson --subscription-required false | jq -r '.name')
+elif [ "${upload_format}" == gql ]; then
+
+  AZURE_API_ID=$(az apim api create --api-id ${CI_PROJECT_NAME} --display-name ${CI_PROJECT_NAME} --path ${CI_PROJECT_NAME} --resource-group ${AZURE_GROUP_NAME} --service-name ${AZURE_API_SERVICE_NAME} --api-type graphql | jq -r '.name')
+
+  az apim api schema create --service-name ${AZURE_API_SERVICE_NAME} -g ${AZURE_GROUP_NAME} --api-id ${CI_PROJECT_NAME} --schema-id graphql --schema-type application/vnd.ms-azure-apim.graphql.schema --schema-path ./${CI_PROJECT_NAME}.gql
+elif [ -z "$upload_format" ]; then
+  AZURE_API_ID=$(az apim api import -g ${AZURE_GROUP_NAME} --api-id  ${CI_PROJECT_NAME} --display-name ${CI_PROJECT_NAME} --service-name ${AZURE_API_SERVICE_NAME} --path ${CI_PROJECT_NAME} --specification-path ./${CI_PROJECT_NAME}.yaml --specification-format OpenApi --subscription-required false | jq -r '.name')
 fi
 
 #AZURE_API_ID="employeeapplication"
@@ -93,7 +100,7 @@ if [ -n "${CORS_ALLOWED_ORIGINS}" ] && [ "${CORS_ALLOWED_ORIGINS}" != null ]; th
  	 CORS_EXPOSE_HEADERS="empty"
   fi
   
-  sh cors-policy-update.sh $CORS_ALLOWED_ORIGINS $CORS_ALLOW_CREDENTIALS $CORS_ALLOWED_METHODS $CORS_CACHE_PERIOD_MAX_SECONDS $CORS_ALLOWED_HEADERS $CORS_EXPOSE_HEADERS
+  sh cors-policy-update.sh $CORS_ALLOWED_ORIGINS $CORS_ALLOW_CREDENTIALS $CORS_ALLOWED_METHODS $CORS_CACHE_PERIOD_MAX_SECONDS $CORS_ALLOWED_HEADERS $CORS_EXPOSE_HEADERS $CORS_POLICY_APPLY
     
 else
   sed -i "s#@CORS@##g" update-policy.sh
